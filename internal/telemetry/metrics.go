@@ -71,8 +71,10 @@ func defaultResources(endpoint, serviceName string) *resource.Resource {
 }
 
 func otelMetricsExporter(ctx context.Context, endpoint string) metric.Exporter {
-	l := slog.Default()
-	l.Debug("configuring metric export for '%s'", endpoint)
+	l := slog.Default().With(
+		slog.String("exporter_endpoint", endpoint),
+	)
+	l.Debug("configuring metric exporter")
 
 	var opts []otlpmetricgrpc.Option
 

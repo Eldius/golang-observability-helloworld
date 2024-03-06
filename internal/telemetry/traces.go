@@ -2,6 +2,7 @@ package telemetry
 
 import (
 	"context"
+	"crypto/rand"
 	"encoding/base64"
 	"fmt"
 	"github.com/eldius/golang-observability-helloworld/internal/config"
@@ -16,7 +17,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"log/slog"
-	"math/rand"
 	"os"
 	"os/signal"
 	"strings"
@@ -24,9 +24,11 @@ import (
 	"time"
 )
 
-const (
-	TraceIDContextKey = "X-Trace-Id"
+var (
+	TraceIDContextKey = traceIDContextKey("X-Trace-Id")
 )
+
+type traceIDContextKey string
 
 var tracerInstance trace.Tracer
 
@@ -43,7 +45,10 @@ func init() {
 	var buf [12]byte
 	var b64 string
 	for len(b64) < 10 {
-		rand.Read(buf[:])
+		if _, err := rand.Read(buf[:]); err != nil {
+			err = fmt.Errorf("generating random preffix: %w", err)
+			panic(err)
+		}
 		b64 = base64.StdEncoding.EncodeToString(buf[:])
 		b64 = strings.NewReplacer("+", "", "/", "").Replace(b64)
 	}
